@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
-from models import QueueEntry, db
+from models import QueueEntry, CallLog, db
 from extensions import socketio
 
 queue_bp = Blueprint("queue", __name__)
 
-@queue_bp.route("/", methods=["POST"])
+# Регистрация в очереди
+@queue_bp.route("/register", methods=["POST"])
 def register_in_queue():
     data = request.json
     full_name = data.get("full_name")
@@ -36,3 +37,52 @@ def register_in_queue():
     })
 
     return jsonify({"success": True, "number": number, "message": "Registered successfully"})
+
+
+# Получение всей очереди
+@queue_bp.route("/", methods=["GET"])
+def get_queue():
+    entries = QueueEntry.query.order_by(QueueEntry.number).all()
+    return jsonify([entry.to_dict() for entry in entries])
+
+
+# Вызов следующего по категории
+@queue_bp.route("/call", methods=["POST"])
+def call_next():
+    data = request.json
+    category = data.get("category")
+    desk = data.get("desk")
+
+    entry = (
+        QueueEntry.query
+        .filter_by(category=category, status="waiting")
+        .order_by(QueueEntry.number)
+        .first()
+    )
+
+    if not entry:
+        return jsonify({"success": False, "message": "Нет ожидающих в очереди"})
+
+    entry.status = "called"
+    db.session.commit()
+
+    log = CallLog(queue_entry_id=entry.id, desk=desk)
+    db.session.add(log)
+    db.session.commit()
+
+    socketio.emit("call", {
+        "full_name": entry.full_name,
+        "number": entry.number,
+        "category": entry.category,
+        "desk": desk
+    })
+
+    return jsonify({
+    "success": True,
+    "message": "Абитуриент вызван",
+    "desk": desk,
+    "number": entry.number,
+    "full_name": entry.full_name,
+    "category": entry.category
+})
+

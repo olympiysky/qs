@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
+import CallNextForm from './components/CallNextForm';
 
 const socket = io();
 
@@ -12,9 +13,9 @@ export default function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await axios.post('/api/queue', {
+    const response = await axios.post('/api/queue/register', {
       full_name: fullName,
-      category: category,
+      category,
     });
     setLatest(response.data);
     setFullName('');
@@ -24,6 +25,9 @@ export default function App() {
   useEffect(() => {
     socket.on('new_registration', (data) => {
       setQueueList((prev) => [...prev, data]);
+    });
+    socket.on('call', (data) => {
+      console.log('Вызов:', data);
     });
     return () => socket.disconnect();
   }, []);
@@ -64,6 +68,9 @@ export default function App() {
           Registered #{latest.number}: {latest.message}
         </div>
       )}
+
+      {/* 🔔 Кнопка вызова */}
+      <CallNextForm />
 
       <div>
         <h2 className="text-xl font-semibold mb-2">Live Queue Feed</h2>
