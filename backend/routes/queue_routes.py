@@ -1,6 +1,9 @@
 from flask import Blueprint, request, jsonify
-from models import QueueEntry, CallLog, db
-from extensions import socketio
+from backend.models import Call
+from backend.models import QueueEntry, CallLog, db
+from backend.extensions import socketio
+from backend.database import db
+from datetime import datetime
 
 queue_bp = Blueprint("queue", __name__)
 
@@ -71,6 +74,10 @@ def call_next():
     db.session.add(log)
     db.session.commit()
 
+    call = Call(number=entry.number, timestamp=datetime.utcnow())
+    db.session.add(call)
+    db.session.commit()
+
     socketio.emit("call", {
         "full_name": entry.full_name,
         "number": entry.number,
@@ -86,3 +93,20 @@ def call_next():
     "full_name": entry.full_name,
     "category": entry.category
 })
+
+@queue_bp.route('/last-calls', methods=['GET'])
+def get_last_calls():
+    # Получаем последние 10 вызовов
+    last_calls = Call.query.order_by(Call.timestamp.desc()).limit(10).all()
+    result = []
+    for call in last_calls:
+        # Пытаемся найти запись в очереди с таким номером
+        entry = QueueEntry.query.filter_by(number=call.number).first()
+        result.append({
+            "id": call.id,
+            "number": call.number,
+            "timestamp": call.timestamp.isoformat(),
+            "full_name": entry.full_name if entry else '-',
+            "desk": entry.desk if entry else '-'
+        })
+    return jsonify(result)

@@ -2,3 +2,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Можно добавить свои стили */
+body {
+  @apply bg-gray-50 text-gray-800;
+}

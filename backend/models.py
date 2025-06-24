@@ -1,5 +1,6 @@
-from database import db
+from backend.database import db
 from datetime import datetime
+
 
 # Категории в человекочитаемом виде
 CATEGORY_LABELS = {
@@ -35,3 +36,15 @@ class CallLog(db.Model):
     queue_entry_id = db.Column(db.Integer, db.ForeignKey('queue_entry.id'))
     desk = db.Column(db.String(10))
     called_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Call(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    number = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "number": self.number,
+            "timestamp": self.timestamp.isoformat()
+        }

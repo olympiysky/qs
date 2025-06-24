@@ -1,9 +1,9 @@
 from flask import Flask
 from flask_cors import CORS
-from database import db
-from config import Config
-from routes.queue_routes import queue_bp
-from extensions import socketio
+from backend.database import db
+from backend.config import Config
+from backend.routes.queue_routes import queue_bp
+from backend.extensions import socketio
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -18,3 +18,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     socketio.run(app, debug=True)
+

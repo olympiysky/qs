@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import MainPage from './pages/MainPage';
 import AdminPage from './pages/AdminPage'; // перемещаем в /pages для логичности
+import LastCallsPage from './pages/LastCallsPage';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/last-calls" element={<LastCallsPage />} />
         </Routes>
       </div>
     </Router>
