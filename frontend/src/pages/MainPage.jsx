@@ -47,10 +47,14 @@ export default function MainPage() {
     socket.on('call', (data) => {
       setQueue((prev) =>
         prev.map((entry) =>
-          entry.number === data.number ? { ...entry, status: 'called' } : entry
-        )
+          entry.number === data.number
+            ? { ...entry, status: 'called', desk: data.desk }
+           : entry
+       )
       );
     });
+
+
 
     return () => socket.disconnect();
   }, []);

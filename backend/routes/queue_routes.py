@@ -64,6 +64,7 @@ def call_next():
         return jsonify({"success": False, "message": "Нет ожидающих в очереди"})
 
     entry.status = "called"
+    entry.desk = desk # Устанавливаем стол для вызова
     db.session.commit()
 
     log = CallLog(queue_entry_id=entry.id, desk=desk)

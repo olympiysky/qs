@@ -17,6 +17,7 @@ class QueueEntry(db.Model):
     number = db.Column(db.Integer, nullable=False, unique=True)
     status = db.Column(db.String(20), default="waiting")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    desk = db.Column(db.String(10))
 
     def to_dict(self):
         return {
@@ -25,7 +26,8 @@ class QueueEntry(db.Model):
             "category": CATEGORY_LABELS.get(self.category, self.category),
             "number": self.number,
             "status": self.status,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
+            "desk": self.desk  # ← обязательно
         }
 
 class CallLog(db.Model):
