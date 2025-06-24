@@ -1,46 +1,69 @@
-// frontend/src/pages/MainPage.jsx
-import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import CallNextForm from '../components/CallNextForm';
+import io from 'socket.io-client';
+import QueueDisplay from '../components/QueueDisplay';
 
 const socket = io();
 
 export default function MainPage() {
   const [fullName, setFullName] = useState('');
   const [category, setCategory] = useState('grant');
-  const [queueList, setQueueList] = useState([]);
+  const [queue, setQueue] = useState([]);
   const [latest, setLatest] = useState(null);
 
+  // Отправка формы регистрации
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await axios.post('/api/queue/register', {
-      full_name: fullName,
-      category,
-    });
-    setLatest(response.data);
-    setFullName('');
-    setCategory('grant');
+    try {
+      const res = await axios.post('/api/queue/register', {
+        full_name: fullName,
+        category,
+      });
+      setLatest(res.data);
+      setFullName('');
+      setCategory('grant');
+    } catch (err) {
+      alert("Ошибка при регистрации");
+    }
+  };
+
+  // Загрузка очереди при старте
+  const fetchQueue = async () => {
+    try {
+      const res = await axios.get('/api/queue');
+      setQueue(res.data);
+    } catch (err) {
+      console.error("Ошибка загрузки очереди");
+    }
   };
 
   useEffect(() => {
+    fetchQueue();
+
     socket.on('new_registration', (data) => {
-      setQueueList((prev) => [...prev, data]);
+      setQueue((prev) => [...prev, data]);
     });
+
     socket.on('call', (data) => {
-      console.log('Вызов:', data);
+      setQueue((prev) =>
+        prev.map((entry) =>
+          entry.number === data.number ? { ...entry, status: 'called' } : entry
+        )
+      );
     });
+
     return () => socket.disconnect();
   }, []);
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">University Queue System</h1>
+      <h1 className="text-2xl font-bold mb-4">Очередь для абитуриентов</h1>
 
+      {/* 📋 Форма регистрации */}
       <form onSubmit={handleSubmit} className="mb-6 space-y-4">
         <input
           type="text"
-          placeholder="Full name"
+          placeholder="ФИО"
           className="border p-2 w-full"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
@@ -52,37 +75,27 @@ export default function MainPage() {
           value={category}
           onChange={(e) => setCategory(e.target.value)}
         >
-          <option value="grant">Bachelor (Grant)</option>
-          <option value="paid">Bachelor (Paid)</option>
-          <option value="magistracy">Magistracy</option>
+          <option value="grant">Бакалавр (Грант)</option>
+          <option value="paid">Бакалавр (Платное)</option>
+          <option value="magistracy">Магистратура</option>
           <option value="phd">PhD</option>
           <option value="platonus">Platonus</option>
         </select>
 
         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-          Register
+          Получить номер
         </button>
       </form>
 
+      {/* ✅ Последний зарегистрированный */}
       {latest && (
         <div className="mb-6 text-green-600 font-semibold">
-          Registered #{latest.number}: {latest.message}
+          Зарегистрирован №{latest.number}: {latest.message}
         </div>
       )}
 
-      {/* 🔔 Кнопка вызова */}
-      <CallNextForm />
-
-      <div>
-        <h2 className="text-xl font-semibold mb-2">Live Queue Feed</h2>
-        <ul className="border rounded p-4 bg-gray-100 space-y-2">
-          {queueList.map((entry, index) => (
-            <li key={index} className="border-b pb-1">
-              #{entry.number} — {entry.full_name} ({entry.category})
-            </li>
-          ))}
-        </ul>
-      </div>
+      {/* 🧾 Отображение очереди */}
+      <QueueDisplay queue={queue} />
     </div>
   );
 }
