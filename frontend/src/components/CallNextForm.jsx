@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-export default function CallNextForm() {
+export default function CallNextForm({ onCallSuccess }) {
   const [category, setCategory] = useState('grant');
   const [desk, setDesk] = useState('');
   const [callResult, setCallResult] = useState(null);
@@ -18,7 +18,12 @@ export default function CallNextForm() {
         category,
         desk,
       });
+
       setCallResult(response.data);
+
+      if (response.data.success && onCallSuccess) {
+        onCallSuccess(); // 🔁 обновление списка очереди
+      }
     } catch (err) {
       alert("Ошибка вызова: " + err.message);
     }
@@ -58,8 +63,8 @@ export default function CallNextForm() {
       {callResult && (
         <div className="mt-2 text-blue-700">
           {callResult.success
-  ? `Вызван #${callResult.number} — ${callResult.full_name} (${callResult.category}) на стол ${callResult.desk}`
-  : callResult.message}
+            ? `Вызван #${callResult.number} — ${callResult.full_name} (${callResult.category}) на стол ${callResult.desk}`
+            : callResult.message}
         </div>
       )}
     </div>
