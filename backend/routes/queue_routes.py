@@ -85,4 +85,3 @@ def call_next():
     "full_name": entry.full_name,
     "category": entry.category
 })
-

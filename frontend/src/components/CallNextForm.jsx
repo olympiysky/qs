@@ -58,8 +58,8 @@ export default function CallNextForm() {
       {callResult && (
         <div className="mt-2 text-blue-700">
           {callResult.success
-            ? `Вызван #${callResult.number} на стол ${callResult.desk}`
-            : callResult.message}
+  ? `Вызван #${callResult.number} — ${callResult.full_name} (${callResult.category}) на стол ${callResult.desk}`
+  : callResult.message}
         </div>
       )}
     </div>
